@@ -1,0 +1,13 @@
+**/parquet/
+**/IDEA_Plugin/*
+**/.idea/
+**/*.iml
+
+**/._SUCCESS.*
+**/_SUCCESS
+
+**/.part-*
+**/part-*
+
+
+.DS_Store

@@ -1,0 +1,344 @@
+{
+ "paragraphs": [
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "IS_INTELLIJ_SERVICE": true,
+      "ZTOOLS_DEBUG_CELL_ID": "30b5989e-bdc9-43ae-bb86-e4907239e0c3"
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "PENDING",
+   "text": "%spark.spark\n//ZToolsId = 30b5989e-bdc9-43ae-bb86-e4907239e0c3\n// It is generated code for integration with Big Data Tools plugin\n// Please DO NOT edit it.\ntry {\n  import org.apache.commons.lang.exception.ExceptionUtils\n  import org.apache.spark.sql.SparkSession\n\n  import java.io.{PrintWriter, StringWriter}\n  import java.util\n  import scala.collection.mutable.ListBuffer\n  import scala.collection.{immutable, mutable}\n  import scala.reflect.api.JavaUniverse\n  import scala.tools.nsc.interpreter.IMain\n  import org.json4s.jackson.Serialization\n  import org.json4s.{Formats, NoTypeHints}\n\n  import java.util.function.{Function => JFunction}\n  import java.util.regex.Pattern\n  import scala.language.implicitConversions\n  import scala.util.Try\n  import org.apache.spark.sql.Dataset\n  import org.apache.spark.rdd.RDD\n  import org.apache.spark.SparkContext\n\n  trait Loopback {\n    def pass(obj: Any, id: String): Any\n  }\n\n  object ResNames {\n    val REF = \"ref\"\n    val VALUE = \"value\"\n    val IS_PRIMITIVE = \"isPrimitive\"\n    val TYPE = \"type\"\n    val TIME = \"time\"\n    val LENGTH = \"length\"\n    val LAZY = \"lazy\"\n  }\n\n  object TrieMap {\n    class Node[T](var value: Option[T]) {\n      var children: mutable.Map[String, TrieMap.Node[T]] = _\n\n      def put(key: String, node: TrieMap.Node[T]): Option[Node[T]] = {\n        if (children == null)\n          children = mutable.Map[String, TrieMap.Node[T]]()\n        children.put(key, node)\n      }\n\n      def del(key: String): Option[Node[T]] = children.remove(key)\n\n      def forEach(func: Function[T, _]): Unit = {\n        func.apply(value.get)\n        if (children != null) children.foreach(t => t._2.forEach(func))\n      }\n    }\n\n    def split(key: String): Array[String] = {\n      var n = 0\n      var j = 0\n      for (i <- 0 until key.length) {\n        if (key.charAt(i) == '.') n += 1\n      }\n      val k = new Array[String](n + 1)\n      val sb = new mutable.StringBuilder(k.length)\n      for (i <- 0 until key.length) {\n        val ch = key.charAt(i)\n        if (ch == '.') {\n          k({\n            j += 1;\n            j - 1\n          }) = sb.toString\n          sb.setLength(0)\n        }\n        else sb.append(ch)\n      }\n      k(j) = sb.toString\n      k\n    }\n  }\n\n  class TrieMap[T] {\n    val root = new TrieMap.Node[T](null)\n\n    def subtree(key: Array[String], length: Int): TrieMap.Node[T] = {\n      var current = root\n      var i = 0\n      while ( {\n        i < length && current != null\n      }) {\n        if (current.children == null) return null\n        current = current.children.get(key(i)).orNull\n        i += 1\n      }\n      current\n    }\n\n    def put(key: Array[String], value: T): Option[TrieMap.Node[T]] = {\n      val node = subtree(key, key.length - 1)\n      node.put(key(key.length - 1), new TrieMap.Node[T](Option.apply(value)))\n    }\n\n    def put(key: String, value: T): Option[TrieMap.Node[T]] = {\n      val k = TrieMap.split(key)\n      put(k, value)\n    }\n\n    def contains(key: String): Boolean = {\n      val k = TrieMap.split(key)\n      val node = subtree(k, k.length)\n      node != null\n    }\n\n    def get(key: String): Option[T] = {\n      val k = TrieMap.split(key)\n      val node = subtree(k, k.length)\n      if (node == null) return Option.empty\n      node.value\n    }\n\n    def subtree(key: String): TrieMap.Node[T] = {\n      val k = TrieMap.split(key)\n      subtree(k, k.length)\n    }\n  }\n\n  trait TypeHandler {\n    def accept(obj: Any): Boolean\n\n    def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any]\n\n    def getErrors: List[String] = List[String]()\n  }\n\n  abstract class AbstractCollectionHandler(limit: Int, timeout: Int) extends AbstractTypeHandler {\n    trait Iterator {\n      def hasNext: Boolean\n\n      def next: Any\n    }\n\n    def iterator(obj: Any): Iterator\n\n    def length(obj: Any): Int\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = {\n      if (depth <= 0) {\n        withJsonObject { result =>\n          var s = scalaInfo.value.toString\n          if (s.length>1000)\n            s = s.take(1000) + \"...\"\n          result += (ResNames.VALUE -> s)\n          return result\n        }\n      } else {\n        mutable.Map[String, Any](\n          ResNames.LENGTH -> length(scalaInfo.value),\n          ResNames.VALUE -> withJsonArray { json =>\n            val startTime = System.currentTimeMillis()\n            val it = iterator(scalaInfo.value)\n            var index = 0\n            while (it.hasNext && index < limit && !checkTimeoutError(scalaInfo.path, startTime, timeout)) {\n                val id = scalaInfo.path\n                json += loopback.pass(it.next, s\"$id[$index]\")\n                index += 1\n            }\n            })\n      }\n    }\n  }\n\n  abstract class AbstractTypeHandler extends TypeHandler {\n    val timeoutErrors: mutable.MutableList[String] = mutable.MutableList()\n\n    override def getErrors: List[String] = timeoutErrors.toList\n\n    protected def withJsonArray(body: mutable.MutableList[Any] => Unit): mutable.MutableList[Any] = {\n      val arr = mutable.MutableList[Any]()\n      body(arr)\n      arr\n    }\n\n    protected def withJsonObject(body: mutable.Map[String, Any] => Unit): mutable.Map[String, Any] = {\n      val obj = mutable.Map[String, Any]()\n      body(obj)\n      obj\n    }\n\n    protected def wrap(obj: Any, tpe: String): mutable.Map[String, Any] = mutable.Map[String, Any](\n      ResNames.VALUE -> Option(obj).orNull,\n      ResNames.TYPE -> tpe\n    )\n\n    protected def checkTimeoutError(name: String, startTime: Long, timeout: Int): Boolean = {\n      val isTimeout = System.currentTimeMillis() - startTime > timeout\n      if (isTimeout)\n        timeoutErrors += f\"Variable $name collect timeout exceed ${timeout}ms.\"\n      isTimeout\n    }\n\n  }\n\n  class ArrayHandler(limit: Int, timeout: Int) extends AbstractCollectionHandler(limit, timeout) {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[Array[_]]\n\n    override def length(obj: Any): Int = obj.asInstanceOf[Array[_]].length\n\n    override def iterator(obj: Any): Iterator = new Iterator {\n      private val it = obj.asInstanceOf[Array[_]].iterator\n\n      override def hasNext: Boolean = it.hasNext\n\n      override def next: Any = it.next\n    }\n  }\n\n  class JavaCollectionHandler(limit: Int, timeout: Int) extends AbstractCollectionHandler(limit, timeout) {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[util.Collection[_]]\n\n    override def iterator(obj: Any): Iterator = new Iterator() {\n      private val it = obj.asInstanceOf[util.Collection[_]].iterator()\n\n      override def hasNext: Boolean = it.hasNext\n\n      override def next: Any = it.next()\n    }\n\n    override def length(obj: Any): Int = obj.asInstanceOf[util.Collection[_]].size()\n  }\n  class MapHandler(limit: Int, timeout: Int) extends AbstractTypeHandler {\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] =\n      withJsonObject {\n        json =>\n          val obj = scalaInfo.value\n          val id = scalaInfo.path\n          val map = obj.asInstanceOf[Map[_, _]]\n          val keys = mutable.MutableList[Any]()\n          val values = mutable.MutableList[Any]()\n          json += (\"jvm-type\" -> obj.getClass.getCanonicalName)\n          json += (\"length\" -> map.size)\n          var index = 0\n\n          json += (\"key\" -> keys)\n          json += (\"value\" -> values)\n\n          val startTime = System.currentTimeMillis()\n          map.view.take(math.min(limit, map.size)).foreach {\n            case (key, value) =>\n              if (checkTimeoutError(scalaInfo.path, startTime, timeout))\n                return json\n              keys += loopback.pass(key, s\"$id.key[$index]\")\n              values += loopback.pass(value, s\"$id.value[$index]\")\n              index += 1\n          }\n      }\n\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[Map[_, _]]\n  }\n\n  class NullHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj == null\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] =\n      mutable.Map[String, Any]()\n  }\n\n  class ObjectHandler(val stringSizeLimit: Int,\n                      val manager: HandlerManager,\n                      val referenceManager: ReferenceManager,\n                      val timeout: Int) extends AbstractTypeHandler {\n    private val INACCESSIBLE = ScalaVariableInfo(isAccessible = false, isLazy = false, null, null, null, null)\n    val ru: JavaUniverse = scala.reflect.runtime.universe\n    val mirror: ru.Mirror = ru.runtimeMirror(getClass.getClassLoader)\n    import scala.reflect.runtime.universe.NoSymbol\n    case class ReflectionProblem(e: Throwable, symbol: String, var count: Int)\n\n    val problems: mutable.Map[String, ReflectionProblem] = mutable.Map[String, ReflectionProblem]()\n\n    override def accept(obj: Any): Boolean = true\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] =\n      withJsonObject { result =>\n        val obj = scalaInfo.value\n\n        if (obj == null) {\n          return result\n        }\n        if (depth <= 0) {\n          var s = obj.toString\n          if (s.length>stringSizeLimit)\n            s = s.take(stringSizeLimit) + \"...\"\n          result += (ResNames.VALUE -> s)\n          return result\n        }\n\n        val startTime = System.currentTimeMillis()\n        val fields = listAccessibleProperties(scalaInfo, startTime)\n        if (fields.isEmpty) {\n          var s = obj.toString\n          if (s.length>stringSizeLimit)\n            s = s.take(stringSizeLimit) + \"...\"\n          result += (ResNames.VALUE -> s)\n          return result\n        }\n\n        val resolvedFields = mutable.Map[String, Any]()\n        result += (ResNames.VALUE -> resolvedFields)\n\n\n        fields.foreach { field =>\n          if (checkTimeoutError(field.name, startTime, timeout)) {\n            return result\n          }\n\n          if (field.ref != null && field.ref != field.path) {\n            resolvedFields += (field.name -> (mutable.Map[String, Any]() += (ResNames.REF -> field.ref)))\n          } else {\n            resolvedFields += (field.name -> manager.handleVariable(field, loopback, depth - 1))\n          }\n        }\n\n        result\n      }\n\n\n    override def getErrors: List[String] = problems.map(x =>\n      f\"Reflection error for ${x._2.symbol} counted ${x._2.count}.\\n\" +\n        f\"Error message: ${ExceptionUtils.getMessage(x._2.e)}\\n \" +\n        f\"Stacktrace:${ExceptionUtils.getStackTrace(x._2.e)}\").toList ++ super.getErrors\n\n    private def listAccessibleProperties(info: ScalaVariableInfo, startTime: Long): List[ScalaVariableInfo] = {\n      val instanceMirror = mirror.reflect(info.value)\n      val instanceSymbol = instanceMirror.symbol\n      val members = instanceSymbol.toType.members\n\n      val parsedMembers = mutable.MutableList[ScalaVariableInfo]()\n      members.foreach { symbol =>\n        if (checkTimeoutError(info.path, startTime, timeout))\n          return parsedMembers.toList\n        val variableInfo = get(instanceMirror, symbol, info.path)\n        if (variableInfo.isAccessible)\n          parsedMembers += variableInfo\n      }\n\n      parsedMembers.toList\n    }\n\n    private def get(instanceMirror: ru.InstanceMirror, symbol: ru.Symbol, path: String): ScalaVariableInfo = {\n      if (!problems.contains(path))\n        try {\n          // is public property\n          if (!symbol.isMethod && symbol.isTerm && (symbol.asTerm.isVar || symbol.asTerm.isVal)\n          && symbol.asTerm.getter != NoSymbol\n          && symbol.asTerm.getter.isPublic) {\n            val term = symbol.asTerm\n            val f = instanceMirror.reflectField(term)\n            val fieldPath = s\"$path.${term.name.toString.trim}\"\n            val value = f.get\n            val tpe = term.typeSignature.toString\n            return ScalaVariableInfo(isAccessible = tpe != \"<notype>\", isLazy = term.isLazy, value, tpe,\n              fieldPath, referenceManager.getRef(value, fieldPath))\n          }\n        } catch {\n          case e: Throwable => problems(path) = ReflectionProblem(e, symbol.toString, 1)\n        }\n      else\n        problems(path).count += 1\n\n      INACCESSIBLE\n    }\n  }\n\n  class PrimitiveHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean =\n      obj match {\n        case _: Byte => true\n        case _: Short => true\n        case _: Boolean => true\n        case _: Char => true\n        case _: Int => true\n        case _: Long => true\n        case _: Float => true\n        case _: Double => true\n        case _ => false\n      }\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] =\n      mutable.Map[String, Any](\n        ResNames.VALUE -> scalaInfo.value,\n        ResNames.IS_PRIMITIVE -> 1\n      )\n  }\n\n  class SeqHandler(limit: Int, timeout: Int) extends AbstractCollectionHandler(limit, timeout) {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[Seq[_]]\n\n    override def iterator(obj: Any): Iterator = new Iterator {\n      private val it = obj.asInstanceOf[Seq[_]].iterator\n\n      override def hasNext: Boolean = it.hasNext\n\n      override def next: Any = it.next()\n    }\n\n    override def length(obj: Any): Int = obj.asInstanceOf[Seq[_]].size\n  }\n\n  class SetHandler(limit: Int, timeout: Int) extends AbstractCollectionHandler(limit, timeout) {\n    override def iterator(obj: Any): Iterator = new Iterator {\n      private val it = obj.asInstanceOf[Set[_]].iterator\n\n      override def hasNext: Boolean = it.hasNext\n\n      override def next: Any = it.next()\n    }\n\n    override def length(obj: Any): Int = obj.asInstanceOf[Set[_]].size\n\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[Set[_]]\n  }\n\n  class SpecialsHandler(limit: Int) extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.getClass.getCanonicalName != null && obj.getClass.getCanonicalName.startsWith(\"scala.\")\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = withJsonObject {\n      json =>\n        var s = scalaInfo.value.toString\n        if (s.length>limit)\n          s = s.take(limit) + \"...\"\n        json.put(ResNames.VALUE, s)\n    }\n  }\n\n  class StringHandler(limit: Int) extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[String]\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = {\n      var s = scalaInfo.value.asInstanceOf[String]\n      if (s.length>limit)\n        s = s.take(limit) + \"...\"\n      mutable.Map(\n        ResNames.VALUE -> s\n      )\n    }\n  }\n\n  class ThrowableHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[Throwable]\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = {\n      val obj = scalaInfo.value\n      val throwable = obj.asInstanceOf[Throwable]\n      val writer = new StringWriter()\n      val out = new PrintWriter(writer)\n      throwable.printStackTrace(out)\n\n      mutable.Map(\n        ResNames.VALUE -> writer.toString\n      )\n    }\n  }\n\n  class HandlerManager(enableProfiling: Boolean,\n                       timeout: Int,\n                       stringSizeLimit: Int,\n                       collectionSizeLimit: Int,\n                       referenceManager: ReferenceManager) {\n    private val handlerChain = ListBuffer[AbstractTypeHandler](\n      new NullHandler(),\n      new StringHandler(stringSizeLimit),\n      new ArrayHandler(collectionSizeLimit, timeout),\n      new JavaCollectionHandler(collectionSizeLimit, timeout),\n      new SeqHandler(collectionSizeLimit, timeout),\n      new SetHandler(collectionSizeLimit, timeout),\n      new MapHandler(collectionSizeLimit, timeout),\n      new ThrowableHandler(),\n      new SpecialsHandler(stringSizeLimit),\n      new PrimitiveHandler(),\n      new DatasetHandler(),\n      new RDDHandler(),\n      new SparkContextHandler(),\n      new SparkSessionHandler(),\n      new ObjectHandler(stringSizeLimit, this, referenceManager, timeout)\n    ).map(new HandlerWrapper(_, enableProfiling))\n\n    def getErrors: mutable.Seq[String] = handlerChain.flatMap(x => x.handler.getErrors)\n\n    def handleVariable(info: ScalaVariableInfo, loopback: Loopback, depth: Int, startTime: Long = System.currentTimeMillis()): Any = {\n      handlerChain.find(_.accept(info)).map(_.handle(info, loopback, depth, startTime)).getOrElse(mutable.Map[String, Any]())\n    }\n  }\n\n  class HandlerWrapper(val handler: TypeHandler, profile: Boolean) {\n    def accept(info: ScalaVariableInfo): Boolean = info.isLazy || handler.accept(info.value)\n\n    def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int, initStartTime: Long): Any = {\n      val startTime = if (initStartTime != null)\n        initStartTime\n      else\n        System.currentTimeMillis()\n\n      val data = if (scalaInfo.isLazy) {\n        mutable.Map[String, Any](ResNames.LAZY -> true)\n      }\n      else {\n        try {\n          val data = handler.handle(scalaInfo, loopback, depth: Int)\n          if (data.keys.count(_ == ResNames.IS_PRIMITIVE) > 0) {\n            return data(ResNames.VALUE)\n          }\n          data\n        } catch {\n          case t: Throwable =>\n            return ExceptionUtils.getRootCauseMessage(t)\n        }\n\n      }\n      try {\n        data.put(ResNames.TYPE, calculateType(scalaInfo))\n      } catch {\n        case t: Throwable =>\n          data.put(ResNames.TYPE, ExceptionUtils.getRootCauseMessage(t))\n      }\n\n      if (profile)\n        data.put(ResNames.TIME, System.currentTimeMillis() - startTime)\n\n      data\n    }\n\n    private def calculateType(scalaInfo: ScalaVariableInfo): String = {\n      if (scalaInfo.tpe != null)\n        return scalaInfo.tpe\n\n      if (scalaInfo.value != null)\n        scalaInfo.value.getClass.getCanonicalName\n      else\n        null\n    }\n  }\n  class InterpreterHandler(val interpreter: IMain) {\n    val wrapper = new ZtoolsInterpreterWrapper(interpreter)\n\n    def getVariableNames: immutable.Seq[String] =\n      interpreter.definedSymbolList.filter { x => x.isGetter }.map(_.name.toString).distinct\n\n    def getInfo(name: String, tpe: String): ScalaVariableInfo = {\n      val obj = valueOfTerm(name).orNull\n      ScalaVariableInfo(isAccessible = true, isLazy = false, obj, tpe, name, null)\n    }\n\n    def valueOfTerm(id: String): Option[Any] = wrapper.valueOfTerm(id)\n  }\n\n  case class ScalaVariableInfo(isAccessible: Boolean,\n                               isLazy: Boolean,\n                               value: Any,\n                               tpe: String,\n                               path: String,\n                               ref: String) {\n    val name: String = if (path != null)\n      path.substring(path.lastIndexOf('.') + 1)\n    else\n      null\n  }\n\n\n\n  //noinspection TypeAnnotation\n  class ZtoolsInterpreterWrapper(val iMain: IMain) {\n\n    import scala.language.implicitConversions\n    import scala.reflect.runtime.{universe => ru}\n    import iMain.global._\n\n    import scala.util.{Try => Trying}\n\n    private lazy val importToGlobal = iMain.global mkImporter ru\n    private lazy val importToRuntime = ru.internal createImporter iMain.global\n\n    private implicit def importFromRu(sym: ru.Symbol) = importToGlobal importSymbol sym\n\n    private implicit def importToRu(sym: Symbol): ru.Symbol = importToRuntime importSymbol sym\n\n    // see https://github.com/scala/scala/pull/5852/commits/a9424205121f450dea2fe2aa281dd400a579a2b7\n    def valueOfTerm(id: String): Option[Any] = exitingTyper {\n      def fixClassBasedFullName(fullName: List[String]): List[String] = {\n        if (settings.Yreplclassbased.value) {\n          val line :: read :: rest = fullName\n          line :: read :: \"INSTANCE\" :: rest\n        } else fullName\n      }\n\n      def value(fullName: String) = {\n        val universe = iMain.runtimeMirror.universe\n        import universe.{InstanceMirror, Symbol, TermName}\n        val pkg :: rest = fixClassBasedFullName((fullName split '.').toList)\n        val top = iMain.runtimeMirror.staticPackage(pkg)\n\n        @annotation.tailrec\n        def loop(inst: InstanceMirror, cur: Symbol, path: List[String]): Option[Any] = {\n          def mirrored =\n            if (inst != null) inst\n            else iMain.runtimeMirror reflect (iMain.runtimeMirror reflectModule cur.asModule).instance\n\n          path match {\n            case last :: Nil =>\n              cur.typeSignature.decls find (x => x.name.toString == last && x.isAccessor) map { m =>\n                (mirrored reflectMethod m.asMethod).apply()\n              }\n            case next :: rest =>\n              val s = cur.typeSignature.member(TermName(next))\n              val i =\n                if (s.isModule) {\n                  if (inst == null) null\n                  else iMain.runtimeMirror reflect (inst reflectModule s.asModule).instance\n                }\n                else if (s.isAccessor) {\n                  iMain.runtimeMirror reflect (mirrored reflectMethod s.asMethod).apply()\n                }\n                else {\n                  assert(false, s.fullName)\n                  inst\n                }\n              loop(i, s, rest)\n            case Nil => None\n          }\n        }\n\n        loop(null, top, rest)\n      }\n\n      Option(iMain.symbolOfTerm(id)) filter (_.exists) flatMap (s => Trying(value(s.fullName)).toOption.flatten)\n    }\n  }\n\n  class ReferenceManager {\n    private val refMap = mutable.Map[ReferenceWrapper, String]()\n    private val refInvMap = new TrieMap[ReferenceWrapper]()\n\n    /**\n     * Returns a reference (e.g. valid path) to the object or creates a record in reference maps (and returns null).\n     *\n     * @param obj  an object we want to find a reference for (can be null)\n     * @param path path of the object e.g. myVar.myField.b\n     * @return reference path to the object obj. The method returns null if obj is null itself or\n     *         obj hasn't been mentioned earlier or in the case of AnyVal object.\n     */\n    def getRef(obj: Any, path: String): String = obj match {\n      case null | _: Unit =>\n        clearRefIfPathExists(path)\n        null\n      case ref: AnyRef =>\n        val wrapper = new ReferenceWrapper(ref)\n        if (refMap.contains(wrapper)) {\n          if (refInvMap.get(path).orNull != wrapper) clearRefIfPathExists(path)\n          refMap(wrapper)\n        } else {\n          clearRefIfPathExists(path)\n          refMap(wrapper) = path\n          refInvMap.put(path, wrapper)\n          null\n        }\n      case _ => null\n    }\n\n\n    private def clearRefIfPathExists(path: String): Unit = {\n      if (refInvMap.contains(path)) {\n        val tree = refInvMap.subtree(path)\n        tree.forEach(refMap.remove(_: ReferenceWrapper))\n      }\n    }\n  }\n\n  class ReferenceWrapper(val ref: AnyRef) {\n    override def hashCode(): Int = ref.hashCode()\n\n    override def equals(obj: Any): Boolean = obj match {\n      case value: ReferenceWrapper =>\n        ref.eq(value.ref)\n      case _ => false\n    }\n  }\n\n\n  class VariablesView(val intp: IMain,\n                      val timeout: Int,\n                      val variableTimeout: Int,\n                      val collectionSizeLimit: Int,\n                      val stringSizeLimit: Int,\n                      val blackList: List[String],\n                      val whiteList: List[String] = null,\n                      val filterUnitResults: Boolean,\n                      val enableProfiling: Boolean,\n                      val depth: Int,\n                      val interpreterResCountLimit: Int = 5) {\n    val errors: mutable.MutableList[String] = mutable.MutableList[String]()\n    private val interpreterHandler = new InterpreterHandler(intp)\n    private val referenceManager = new ReferenceManager()\n\n    private val touched = mutable.Map[String, ScalaVariableInfo]()\n\n    private val handlerManager = new HandlerManager(\n      collectionSizeLimit = collectionSizeLimit,\n      stringSizeLimit = stringSizeLimit,\n      timeout = variableTimeout,\n      referenceManager = referenceManager,\n      enableProfiling = enableProfiling\n    )\n\n    //noinspection ScalaUnusedSymbol\n    def getZtoolsJsonResult: String = {\n      implicit val ztoolsFormats: AnyRef with Formats = Serialization.formats(NoTypeHints)\n      Serialization.write(\n        Map(\n          \"variables\" -> resolveVariables,\n          \"errors\" -> (errors ++ handlerManager.getErrors)\n        )\n      )\n    }\n\n    def toJson: String = {\n      implicit val ztoolsFormats: AnyRef with Formats = Serialization.formats(NoTypeHints)\n      Serialization.write(resolveVariables)\n    }\n\n    def resolveVariables: mutable.Map[String, Any] = {\n      val result: mutable.Map[String, Any] = mutable.Map[String, Any]()\n      val startTime = System.currentTimeMillis()\n\n      val interpreterVariablesNames = interpreterHandler.getVariableNames\n      val finalNames = filterVariableNames(interpreterVariablesNames)\n\n      finalNames.foreach { name =>\n        val varType = interpreterHandler.interpreter.typeOfTerm(name).toString().stripPrefix(\"()\")\n        val variable = mutable.Map[String, Any]()\n\n        result += name -> variable\n        variable += ResNames.TYPE -> varType\n        if (!isUnitOrNullResult(result, name))\n          variable += ResNames.VALUE -> \"<Not calculated>\"\n      }\n\n      var passedVariablesCount = 0\n      val totalVariablesCount = finalNames.size\n\n      if (checkTimeout(startTime, passedVariablesCount, totalVariablesCount))\n        return result\n\n      finalNames.foreach { name =>\n        if (checkTimeout(startTime, passedVariablesCount, totalVariablesCount))\n          return result\n        passedVariablesCount += 1\n\n        if (!isUnitOrNullResult(result, name)) {\n\n          calculateVariable(result, name)\n        }\n      }\n      result\n    }\n\n    private def calculateVariable(result: mutable.Map[String, Any], name: String) = {\n      val valMap = result(name).asInstanceOf[mutable.Map[String, Any]]\n      try {\n        val startTime = System.currentTimeMillis()\n\n        val info = interpreterHandler.getInfo(name, valMap(ResNames.TYPE).asInstanceOf[String])\n        val ref = referenceManager.getRef(info.value, name)\n        touched(info.path) = info\n\n        if (ref != null && ref != info.path) {\n          result += (info.path -> mutable.Map[String, Any](ResNames.REF -> ref))\n        } else {\n          result += info.path -> parseInfo(info, depth, startTime)\n        }\n      } catch {\n        case t: Throwable =>\n          valMap += ResNames.VALUE -> ExceptionUtils.getRootCauseMessage(t)\n      }\n    }\n\n    private def isUnitOrNullResult(result: mutable.Map[String, Any], name: String) = {\n      val res = result(name).asInstanceOf[mutable.Map[String, Any]]\n      val valType = res(ResNames.TYPE)\n      valType == \"Unit\" || valType == \"Null\"\n    }\n\n    def resolveVariable(path: String): mutable.Map[String, Any] = {\n      val result = mutable.Map[String, Any]()\n      val obj = touched.get(path).orNull\n      if (obj.ref != null) {\n        result += (ResNames.VALUE -> mutable.Map[String, Any](ResNames.REF -> obj.ref))\n      } else {\n        result += (ResNames.VALUE -> parseInfo(obj, depth))\n      }\n      result\n    }\n\n    private def parseInfo(info: ScalaVariableInfo, depth: Int, startTime: Long = System.currentTimeMillis()): Any = {\n      val loopback = new Loopback {\n        override def pass(obj: Any, id: String): Any = {\n          val si = ScalaVariableInfo(isAccessible = true, isLazy = false, obj, null, id, referenceManager.getRef(obj, id))\n          parseInfo(si, depth - 1)\n        }\n      }\n      handlerManager.handleVariable(info, loopback, depth, startTime)\n    }\n\n    private def filterVariableNames(interpreterVariablesNames: Seq[String]) = {\n      val variablesNames = interpreterVariablesNames.seq\n        .filter { name => !blackList.contains(name) }\n        .filter { name => whiteList == null || whiteList.contains(name) }\n\n\n      val p = Pattern.compile(\"res\\\\d*\")\n      val (resVariables, otherVariables: immutable.Seq[String]) = variablesNames.partition(x => p.matcher(x).matches())\n      val sortedResVariables = resVariables\n        .map(res => Try(res.stripPrefix(\"res\").toInt))\n        .filter(_.isSuccess)\n        .map(_.get)\n        .sortWith(_ > _)\n        .take(interpreterResCountLimit)\n        .map(num => \"res\" + num)\n\n      val finalNames = otherVariables ++ sortedResVariables\n      finalNames\n    }\n\n    //noinspection ScalaUnusedSymbol\n    private implicit def toJavaFunction[A, B](f: A => B): JFunction[A, B] = new JFunction[A, B] {\n      override def apply(a: A): B = f(a)\n    }\n\n    private def checkTimeout(startTimeout: Long, passed: Int, total: Int): Boolean = {\n      val isTimeoutExceed = System.currentTimeMillis() - startTimeout > timeout\n      if (isTimeoutExceed)\n        errors += s\"Variables collect timeout. Exceed ${timeout}ms. Parsed $passed from $total.\"\n      isTimeoutExceed\n    }\n  }\n\n  class DatasetHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[Dataset[_]]\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = {\n      val obj = scalaInfo.value\n      val df = obj.asInstanceOf[Dataset[_]]\n\n\n      val schema = df.schema\n      val jsonSchemaColumns = schema.fields.map(field => {\n        val value = withJsonObject { jsonField =>\n          jsonField += \"name\" -> wrap(field.name, null)\n          jsonField += \"nullable\" -> wrap(field.nullable, null)\n          jsonField += \"dataType\" -> wrap(field.dataType.typeName, null)\n        }\n        wrap(value, \"org.apache.spark.sql.types.StructField\")\n      }\n      )\n\n      val jsonSchema = mutable.Map(\n        ResNames.VALUE -> jsonSchemaColumns,\n        ResNames.TYPE -> \"org.apache.spark.sql.types.StructType\",\n        ResNames.LENGTH -> jsonSchemaColumns.length\n      )\n\n      val dfValue = mutable.Map(\n        \"schema()\" -> jsonSchema,\n        \"getStorageLevel()\" -> wrap(df.storageLevel.toString(), \"org.apache.spark.storage.StorageLevel\")\n      )\n\n      mutable.Map(\n        ResNames.VALUE -> dfValue\n      )\n    }\n  }\n\n\n  class RDDHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[RDD[_]]\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = withJsonObject {\n      json =>\n        val obj = scalaInfo.value\n        val rdd = obj.asInstanceOf[RDD[_]]\n        json += (ResNames.VALUE -> withJsonObject { value =>\n          value += (\"getNumPartitions()\" -> wrap(rdd.getNumPartitions, \"Int\"))\n          value += (\"name\" -> wrap(rdd.name, \"String\"))\n          value += (\"id\" -> wrap(rdd.id, \"Int\"))\n          value += (\"partitioner\" -> wrap(rdd.partitioner.toString, \"Option[org.apache.spark.Partitioner]\"))\n          value += (\"getStorageLevel()\" -> wrap(rdd.getStorageLevel.toString, \"org.apache.spark.storage.StorageLevel\"))\n        })\n    }\n  }\n\n  class SparkContextHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[SparkContext]\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = withJsonObject {\n      json =>\n        val sc = scalaInfo.value.asInstanceOf[SparkContext]\n        json += (ResNames.VALUE -> withJsonObject { json =>\n          json += (\"sparkUser\" -> wrap(sc.sparkUser, \"String\"))\n          json += (\"sparkTime\" -> wrap(sc.startTime, \"Long\"))\n          json += (\"applicationId()\" -> wrap(sc.applicationId, \"String\"))\n          json += (\"applicationAttemptId()\" -> wrap(sc.applicationAttemptId.toString, \"Option[String]\"))\n          json += (\"appName()\" -> sc.appName)\n        })\n    }\n  }\n\n  class SparkSessionHandler extends AbstractTypeHandler {\n    override def accept(obj: Any): Boolean = obj.isInstanceOf[SparkSession]\n\n    override def handle(scalaInfo: ScalaVariableInfo, loopback: Loopback, depth: Int): mutable.Map[String, Any] = withJsonObject {\n      json =>\n        val obj = scalaInfo.value\n        val id = scalaInfo.path\n\n        val spark = obj.asInstanceOf[SparkSession]\n        json += (ResNames.VALUE -> withJsonObject { json =>\n          json += (\"version()\" -> spark.version)\n          json += (\"sparkContext\" -> loopback.pass(spark.sparkContext, s\"$id.sparkContext\"))\n        })\n    }\n  }\n\n\n  /**\n   * Main section\n   */\n  val iMain: IMain = $intp\n  val depth: Int = 2\n  val filterUnitResults: Boolean = true\n  val enableProfiling: Boolean = true\n  val collectionSizeLimit = 100\n  val stringSizeLimit = 400\n  val timeout = 5000\n  val variableTimeout = 2000\n  val interpreterResCountLimit = 10\n  val blackList = \"$intp,sqlContext,z,engine\".split(',').toList\n  val whiteList: List[String] =  null\n\n\n  val variableView = new VariablesView(\n    intp = iMain,\n    timeout = timeout,\n    variableTimeout = variableTimeout,\n    collectionSizeLimit = collectionSizeLimit,\n    stringSizeLimit = stringSizeLimit,\n    blackList = blackList,\n    whiteList = whiteList,\n    filterUnitResults = filterUnitResults,\n    enableProfiling = enableProfiling,\n    depth = depth,\n    interpreterResCountLimit = interpreterResCountLimit\n  )\n\n  implicit val ztoolsFormats: AnyRef with Formats = Serialization.formats(NoTypeHints)\n  val variablesJson = variableView.getZtoolsJsonResult\n  println(\"---ztools-scala---\")\n  println(variablesJson)\n  println(\"---ztools-scala---\")\n}\ncatch {\n  case t: Throwable =>\n    import org.apache.commons.lang.exception.ExceptionUtils\n    import org.json4s.jackson.Serialization\n    import org.json4s.{Formats, NoTypeHints}\n\n    implicit val ztoolsFormats: AnyRef with Formats = Serialization.formats(NoTypeHints)\n    val result = Serialization.write(Map(\n      \"errors\" -> Array(f\"${ExceptionUtils.getMessage(t)}\\n${ExceptionUtils.getStackTrace(t)}\")\n    ))\n    println(\"---ztools-scala---\")\n    println(result)\n    println(\"---ztools-scala---\")\n}\n{\n    var sqlTableShows: Array[String] = Array(\"SHOW TABLES  \")\n    val additionalTables = Array[Tuple2[String, String]]()\n    val timeout = 5000\n    val collectOnlyTempTables = false\n    val appendOutput = false\n\n    case class ZtoolsColumn(name: String,\n                            columnType: String,\n                            description: String)\n\n    case class ZtoolsTable(name: String,\n                           databaseName: String,\n                           var columns: Array[ZtoolsColumn],\n                           var error: String = null)\n\n    case class ZtoolsSqlProfile(request: String, time: Long)\n\n    case class ZtoolsSqlInfo(tables: Array[ZtoolsTable],\n                             errors: Array[String],\n                             profiling: Array[ZtoolsSqlProfile],\n                             appendOutput: Boolean = appendOutput)\n\n\n    //TO KNOW:\n    //We collect info by spark.sql not spark.catalog because there some errors with Glue, database does not read\n    //Additionally we cannot use column name because it can be different \"namespace\" in EMR and \"database\" in vanilla spark\n    def calcZtoolsSqlSchemas(): String = {\n        import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility\n        import com.fasterxml.jackson.annotation.PropertyAccessor\n        import com.fasterxml.jackson.databind.ObjectMapper\n        import org.apache.commons.lang.exception.ExceptionUtils\n        import org.apache.spark.sql.Row\n\n        import scala.collection.mutable.ArrayBuffer\n\n        val startTime = System.currentTimeMillis()\n        val errors = ArrayBuffer[String]()\n\n        def convertThrowable(msg: String, t: Throwable): String = msg + \"\\n\" +\n                ExceptionUtils.getRootCauseMessage(t) + \"\\n\" +\n                ExceptionUtils.getStackTrace(t)\n\n        def escapeSql(string: String) = \"`\" + string.replace(\"`\", \"``\") + \"`\"\n\n\n\n\n        var tables = ArrayBuffer[ZtoolsTable]()\n        var profilingResult = ArrayBuffer[ZtoolsSqlProfile]()\n\n        def performSql(sqlRequest: String): Tuple2[Array[_ <: Row], String] = {\n            if (System.currentTimeMillis() - startTime > timeout) {\n                val error = f\"Timeout $timeout exceed. Sql request '$sqlRequest' ignored.\"\n                errors.append(error)\n                return (Array.empty, error)\n            }\n            val startTransactionTime = System.currentTimeMillis()\n            try {\n                val rows = spark.sql(sqlRequest).collect()\n                (rows, null)\n            } catch {\n                case t: Throwable =>\n                    errors.append(convertThrowable(sqlRequest, t))\n                    (Array.empty, ExceptionUtils.getMessage(t))\n            } finally {\n                profilingResult += ZtoolsSqlProfile(sqlRequest, System.currentTimeMillis() - startTransactionTime)\n            }\n        }\n\n        if (sqlTableShows!=null && sqlTableShows.isEmpty) {\n            val sqlRequest = \"show databases\"\n            val databases = performSql(sqlRequest)._1.map(_.getAs[String](0))\n            sqlTableShows = databases.map(db => f\"SHOW TABLES in $db\")\n        }\n\n        if (sqlTableShows==null) {\n            sqlTableShows = Array.empty\n        }\n\n        sqlTableShows.foreach(sqlRequest => {\n            try {\n                var listTables = performSql(sqlRequest)._1\n                if (collectOnlyTempTables)\n                    listTables = listTables.filter(_.getAs[Boolean](2) == true)\n\n                listTables.map(row => ZtoolsTable(\n                    databaseName = row.getAs[String](0),\n                    name = row.getAs[String](1),\n                    columns = Array.empty[ZtoolsColumn])).foreach(t => tables.append(t))\n            } catch {\n                case t: Throwable =>\n                    errors.append(convertThrowable(s\"Error transform output of  $sqlRequest\", t))\n                    ArrayBuffer.empty[ZtoolsTable]\n            }\n        })\n\n        val tableSet = (additionalTables.map(it => ZtoolsTable(it._2, it._1, Array.empty)) ++ tables).distinct\n\n        def processTable(table: ZtoolsTable): Unit = {\n            val columns = try {\n                val tableSqlName = if (table.databaseName == null || table.databaseName.isEmpty)\n                    escapeSql(table.name)\n                else\n                    escapeSql(table.databaseName) + \".\" + escapeSql(table.name)\n\n                //https://spark.apache.org/docs/3.0.0-preview/sql-ref-syntax-aux-describe-table.html\n                val sqlResult = performSql(s\"DESCRIBE TABLE $tableSqlName\")\n\n                val columnRows = sqlResult._1\n                table.error = sqlResult._2\n\n                //Ignore partition section\n                columnRows.takeWhile(row => !Option(row.getAs[String](0)).getOrElse(\"\").startsWith(\"# \"))\n                        .map(row => ZtoolsColumn(row.getAs[String](0), row.getAs[String](1), row.getAs[String](2)))\n            } catch {\n                case t: Throwable => convertThrowable(s\"Error list columns for ${table.name}\", t)\n                    table.error = ExceptionUtils.getRootCauseMessage(t)\n                    errors.append(convertThrowable(s\"Error list columns for ${table.name}\", t))\n                    return\n            }\n            table.columns = columns\n        }\n\n        tableSet.foreach(table => {\n            processTable(table)\n        })\n\n        val res = ZtoolsSqlInfo(tableSet.toArray, errors.toArray, profilingResult.toArray)\n        val objectMapper = new ObjectMapper().setVisibility(PropertyAccessor.FIELD, Visibility.ANY).writerWithDefaultPrettyPrinter()\n        objectMapper.writeValueAsString(res)\n    }\n\n    def ztoolsPrintResult(): Unit = {\n        val ztoolsSqlResult = calcZtoolsSqlSchemas()\n        println(\"---ztools-sql---\")\n        println(ztoolsSqlResult)\n        println(\"---ztools-sql---\")\n    }\n\n    ztoolsPrintResult()\n}",
+   "id": "",
+   "dateCreated": "2024-05-30 23:20:54.326",
+   "config": {
+    "tableHide": true,
+    "editorHide": true
+   },
+   "dateStarted": "2024-05-30 23:20:54.701",
+   "dateUpdated": "2024-05-30 23:20:54.701"
+  },
+  {
+   "title": "Transform CSV files to Parquet",
+   "text": "spark.read.option(\"header\", \"true\").csv(\"/data/csv/inhabitants_2017.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/inhabitants_2017.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/inhabitants_2018.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/inhabitants_2018.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/inhabitants_2019.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/inhabitants_2019.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/inhabitants_2020.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/inhabitants_2020.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/inhabitants_2021.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/inhabitants_2021.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/neighborhood.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/neighborhood.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/municipality.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/municipality.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/province.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/province.parquet\")\nspark.read.option(\"header\", \"true\").csv(\"/data/csv/country.csv\").write.mode(\"overwrite\").parquet(\"/data/parquet/country.parquet\")",
+   "user": "anonymous",
+   "dateUpdated": "2024-05-30 16:27:44.639",
+   "progress": 100,
+   "config": {
+    "editorSetting": {
+     "language": "scala",
+     "editOnDblClick": false,
+     "completionKey": "TAB",
+     "completionSupport": true
+    },
+    "colWidth": 12.0,
+    "editorMode": "ace/mode/scala",
+    "fontSize": 9.0,
+    "title": true,
+    "results": {},
+    "enabled": true
+   },
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "runtimeInfos": {
+    "jobUrl": {
+     "propertyName": "jobUrl",
+     "label": "SPARK JOB",
+     "tooltip": "View in Spark web UI",
+     "group": "spark",
+     "values": [
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=18"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=19"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=20"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=21"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=22"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=23"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=24"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=25"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=26"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=27"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=28"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=29"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=30"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=31"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=32"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=33"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=34"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=35"
+      }
+     ],
+     "interpreterSettingId": "spark"
+    }
+   },
+   "progressUpdateIntervalMs": 500,
+   "jobName": "paragraph_1717062143452_1813784044",
+   "id": "paragraph_1717062143452_1813784044",
+   "dateCreated": "2024-05-30 09:42:23.455",
+   "dateStarted": "2024-05-30 16:26:50.914",
+   "dateFinished": "2024-05-30 16:27:44.638",
+   "status": "FINISHED",
+   "results": {
+    "code": "SUCCESS",
+    "msg": []
+   }
+  },
+  {
+   "title": "View Dataset schemas",
+   "text": "// Inhabitants 2017\nval inhabitants_2017 = spark.read.parquet(\"/data/parquet/inhabitants_2017.parquet\")\ninhabitants_2017.printSchema()\n\n// Inhabitants 2018\nval inhabitants_2018 = spark.read.parquet(\"/data/parquet/inhabitants_2018.parquet\")\ninhabitants_2018.printSchema()\n\n// Inhabitants 2019\nval inhabitants_2019 = spark.read.parquet(\"/data/parquet/inhabitants_2019.parquet\")\ninhabitants_2019.printSchema()\n\n// Inhabitants 2020\nval inhabitants_2020 = spark.read.parquet(\"/data/parquet/inhabitants_2020.parquet\")\ninhabitants_2020.printSchema()\n\n// Inhabitants 2021\nval inhabitants_2021 = spark.read.parquet(\"/data/parquet/inhabitants_2021.parquet\")\ninhabitants_2021.printSchema()\n\n// Neighborhood\nval neighbourhood = spark.read.parquet(\"/data/parquet/neighborhood.parquet\")\nneighbourhood.printSchema()\n\n// Municipality\nval municipaly = spark.read.parquet(\"/data/parquet/municipality.parquet\")\nmunicipaly.printSchema()\n\n// Province\nval province = spark.read.parquet(\"/data/parquet/province.parquet\")\nprovince.printSchema()\n\n// Country\nval country = spark.read.parquet(\"/data/parquet/country.parquet\")\ncountry.printSchema()\n",
+   "user": "anonymous",
+   "dateUpdated": "2024-05-30 16:28:11.663",
+   "progress": 0,
+   "config": {
+    "editorSetting": {
+     "language": "scala",
+     "editOnDblClick": false,
+     "completionKey": "TAB",
+     "completionSupport": true
+    },
+    "colWidth": 12.0,
+    "editorMode": "ace/mode/scala",
+    "fontSize": 9.0,
+    "title": true,
+    "results": {},
+    "enabled": true
+   },
+   "settings": {
+    "params": {
+     "bdtMeta": {}
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "runtimeInfos": {
+    "jobUrl": {
+     "propertyName": "jobUrl",
+     "label": "SPARK JOB",
+     "tooltip": "View in Spark web UI",
+     "group": "spark",
+     "values": [
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=53"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=54"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=55"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=56"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=57"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=58"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=59"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=60"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=61"
+      }
+     ],
+     "interpreterSettingId": "spark"
+    }
+   },
+   "progressUpdateIntervalMs": 500,
+   "jobName": "paragraph_1717062772957_508315635",
+   "id": "paragraph_1717062772957_508315635",
+   "dateCreated": "2024-05-30 09:52:52.958",
+   "dateStarted": "2024-05-30 16:28:08.466",
+   "dateFinished": "2024-05-30 16:28:11.660",
+   "status": "FINISHED",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "root\n |-- NHOP: string (nullable = true)\n |-- EDAD: string (nullable = true)\n |-- SEXO: string (nullable = true)\n |-- CPRON: string (nullable = true)\n |-- CMUNN: string (nullable = true)\n |-- NACI: string (nullable = true)\n |-- BARRIO: string (nullable = true)\n |-- ID: string (nullable = true)\n\nroot\n |-- NHOP: string (nullable = true)\n |-- EDAD: string (nullable = true)\n |-- SEXO: string (nullable = true)\n |-- CPRON: string (nullable = true)\n |-- CMUNN: string (nullable = true)\n |-- NACI: string (nullable = true)\n |-- BARRIO: string (nullable = true)\n\nroot\n |-- NHOP: string (nullable = true)\n |-- EDAD: string (nullable = true)\n |-- SEXO: string (nullable = true)\n |-- CPRON: string (nullable = true)\n |-- CMUNN: string (nullable = true)\n |-- NACI: string (nullable = true)\n |-- BARRIO: string (nullable = true)\n\nroot\n |-- NHOP: string (nullable = true)\n |-- SEXO: string (nullable = true)\n |-- CPRON: string (nullable = true)\n |-- CMUNN: string (nullable = true)\n |-- NACI: string (nullable = true)\n |-- BARRIO: string (nullable = true)\n |-- EDAD: string (nullable = true)\n\nroot\n |-- NHOP: string (nullable = true)\n |-- EDAD: string (nullable = true)\n |-- SEXO: string (nullable = true)\n |-- CPRON: string (nullable = true)\n |-- CMUNN: string (nullable = true)\n |-- NACI: string (nullable = true)\n |-- BARRIO: string (nullable = true)\n |-- PRDP: string (nullable = true)\n |-- MUDP: string (nullable = true)\n\nroot\n |-- FID: string (nullable = true)\n |-- ID_BARRIO: string (nullable = true)\n |-- NUMBARRIO: string (nullable = true)\n |-- NOMBARRIO: string (nullable = true)\n |-- NOMCOMUNBAR: string (nullable = true)\n |-- SDOAREA: string (nullable = true)\n\nroot\n |-- PROV: string (nullable = true)\n |-- PROVINCIA: string (nullable = true)\n |-- MUN: string (nullable = true)\n |-- MUNICIPO: string (nullable = true)\n |-- FALTA: string (nullable = true)\n |-- FBAJA: string (nullable = true)\n\nroot\n |-- CA: string (nullable = true)\n |-- CPROV: string (nullable = true)\n |-- CCAPP: string (nullable = true)\n |-- NOMBREPROV: string (nullable = true)\n\nroot\n |-- CODPAIS: string (nullable = true)\n |-- CTRL: string (nullable = true)\n |-- PAIS: string (nullable = true)\n |-- FALTA: string (nullable = true)\n |-- FBAJA: string (nullable = true)\n\n\u001b[1m\u001b[34minhabitants_2017\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 6 more fields]\n\u001b[1m\u001b[34minhabitants_2018\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 5 more fields]\n\u001b[1m\u001b[34minhabitants_2019\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 5 more fields]\n\u001b[1m\u001b[34minhabitants_2020\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, SEXO: string ... 5 more fields]\n\u001b[1m\u001b[34minhabitants_2021\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 7 more fields]\n\u001b[1m\u001b[34mneighbourhood\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [FID: string, ID_BARRIO: string ... 4 more fields]\n\u001b[1m\u001b[34mmunicipaly\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.s...\n"
+     }
+    ]
+   }
+  },
+  {
+   "text": "println(\"Inhabitants 2017 DS size: \" + inhabitants_2017.count())\nprintln(\"Inhabitants 2018 DS size: \" + inhabitants_2018.count())\nprintln(\"Inhabitants 2019 DS size: \" + inhabitants_2019.count())\nprintln(\"Inhabitants 2020 DS size: \" + inhabitants_2020.count())\nprintln(\"Inhabitants 2021 DS size: \" + inhabitants_2021.count())\nprintln(\"Neighborhood DS size: \" + neighbourhood.count())\nprintln(\"Municipality DS size: \" + municipaly.count())\nprintln(\"Province DS size: \" + province.count())\nprintln(\"Country DS size: \" + country.count())",
+   "user": "anonymous",
+   "dateUpdated": "2024-05-30 23:20:54.151",
+   "progress": 100,
+   "config": {
+    "editorSetting": {
+     "language": "scala",
+     "editOnDblClick": false,
+     "completionKey": "TAB",
+     "completionSupport": true
+    },
+    "colWidth": 12.0,
+    "editorMode": "ace/mode/scala",
+    "fontSize": 9.0,
+    "results": {},
+    "enabled": true
+   },
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "runtimeInfos": {
+    "jobUrl": {
+     "propertyName": "jobUrl",
+     "label": "SPARK JOB",
+     "tooltip": "View in Spark web UI",
+     "group": "spark",
+     "values": [
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=98"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=99"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=100"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=101"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=102"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=103"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=104"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=105"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=106"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=107"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=108"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=109"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=110"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=111"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=112"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=113"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=114"
+      },
+      {
+       "jobUrl": "http://localhost:4040/jobs/job?id=115"
+      }
+     ],
+     "interpreterSettingId": "spark"
+    }
+   },
+   "progressUpdateIntervalMs": 500,
+   "jobName": "paragraph_1717063984212_945502952",
+   "id": "paragraph_1717063984212_945502952",
+   "dateCreated": "2024-05-30 10:13:04.213",
+   "dateStarted": "2024-05-30 16:29:24.938",
+   "dateFinished": "2024-05-30 23:20:54.150",
+   "status": "ABORT",
+   "results": {
+    "code": "ERROR",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "Aborted. Reason Exception: Disconnected from Zeppelin server, status: 0, reason: "
+     }
+    ]
+   }
+  },
+  {
+   "text": "",
+   "user": "anonymous",
+   "dateUpdated": "2024-05-30 10:13:34.312",
+   "progress": 0,
+   "config": {},
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "runtimeInfos": {},
+   "progressUpdateIntervalMs": 500,
+   "jobName": "paragraph_1717064014254_454045595",
+   "id": "paragraph_1717064014254_454045595",
+   "dateCreated": "2024-05-30 10:13:34.255",
+   "status": "READY"
+  }
+ ],
+ "name": "00_transform_from_csv_to_parquet",
+ "id": "2JZUJZRPQ",
+ "defaultInterpreterGroup": "spark",
+ "version": "0.10.1",
+ "noteParams": {},
+ "noteForms": {},
+ "angularObjects": {},
+ "config": {
+  "isZeppelinNotebookCronEnable": false
+ },
+ "info": {}
+}

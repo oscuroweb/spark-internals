@@ -1,0 +1,573 @@
+{
+ "paragraphs": [
+  {
+   "user": "anonymous",
+   "config": {
+    "colWidth": 12,
+    "fontSize": 9,
+    "enabled": true,
+    "results": {},
+    "editorSetting": {
+     "language": "scala",
+     "editOnDblClick": false,
+     "completionKey": "TAB",
+     "completionSupport": true
+    },
+    "editorMode": "ace/mode/scala",
+    "title": true
+   },
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PRDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "jobName": "paragraph_1563110258183_1613653816",
+   "id": "20190714-161738_1950435706",
+   "dateCreated": "2019-07-14T16:17:38+0300",
+   "status": "FINISHED",
+   "progressUpdateIntervalMs": 500,
+   "focus": true,
+   "$$hashKey": "object:394",
+   "title": "Read Inhabitants Parquet",
+   "text": "val inhabitants_2021 = spark\n    .read\n    .parquet(\"/data/parquet/inhabitants_2021.parquet\")\n    .withColumn(\"EDAD\", col(\"EDAD\").cast(\"int\"))\n\ninhabitants_2021.show(5, false)",
+   "dateStarted": "2024-05-30 14:06:01.713",
+   "dateUpdated": "2024-05-30 14:06:03.194",
+   "dateFinished": "2024-05-30 14:06:03.194",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "+----+----+----+-----+-----+----+------+----+----+\n|NHOP|EDAD|SEXO|CPRON|CMUNN|NACI|BARRIO|PRDP|MUDP|\n+----+----+----+-----+-----+----+------+----+----+\n|457 |63  |1   |29   |84   |108 |141   |0   |0   |\n|587 |22  |6   |29   |67   |108 |141   |0   |0   |\n|587 |19  |6   |29   |1    |108 |141   |0   |0   |\n|495 |69  |1   |18   |159  |108 |141   |0   |0   |\n|795 |52  |1   |51   |1    |108 |141   |0   |0   |\n+----+----+----+-----+-----+----+------+----+----+\nonly showing top 5 rows\n\n\u001b[1m\u001b[34minhabitants_2021\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: int ... 7 more fields]\n"
+     }
+    ]
+   }
+  },
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PRDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "Malaga",
+          "tpe": {
+           "presentableName": "boolean"
+          },
+          "nullable": true
+         },
+         {
+          "name": "Barcelona",
+          "tpe": {
+           "presentableName": "boolean"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "val inhabitants_tranform_1 = inhabitants_2021\n    .filter(col(\"BARRIO\").equalTo(\"141\"))\n    .filter(col(\"NACI\").notEqual(\"108\"))\n    .filter(col(\"EDAD\").lt(18))\n    .withColumn(\"Malaga\", col(\"CPRON\").equalTo(29))\n    .withColumn(\"Barcelona\", col(\"CPRON\").equalTo(8))",
+   "id": "",
+   "dateCreated": "2024-05-30 13:31:23.698",
+   "config": {
+    "title": true
+   },
+   "title": "Transformation - Alternative 1",
+   "dateStarted": "2024-05-30 14:06:07.267",
+   "dateUpdated": "2024-05-30 14:06:07.633",
+   "dateFinished": "2024-05-30 14:06:07.633",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "\u001b[1m\u001b[34minhabitants_tranform_1\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: int ... 9 more fields]\n"
+     }
+    ]
+   }
+  },
+  {
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "val inhabitants_tranform_2 = inhabitants_2021\n    .withColumn(\"Malaga\", col(\"CPRON\").equalTo(29))\n    .withColumn(\"Barcelona\", col(\"CPRON\").equalTo(8))\n    .filter(col(\"EDAD\").lt(18)\n      .and(col(\"NACI\").notEqual(\"108\"))\n      .and(col(\"BARRIO\").equalTo(\"141\")))",
+   "id": "",
+   "dateCreated": "2024-05-30 13:39:57.747",
+   "config": {
+    "title": true
+   },
+   "title": "Transformation - Alternative 2",
+   "dateStarted": "2024-05-30 14:06:09.608",
+   "dateUpdated": "2024-05-30 14:06:10.188",
+   "dateFinished": "2024-05-30 14:06:10.188",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "\u001b[1m\u001b[34minhabitants_tranform_2\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m = [NHOP: string, EDAD: int ... 9 more fields]\n"
+     }
+    ]
+   }
+  },
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PRDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "Malaga",
+          "tpe": {
+           "presentableName": "boolean"
+          },
+          "nullable": true
+         }
+        ]
+       },
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PRDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUDP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "Malaga",
+          "tpe": {
+           "presentableName": "boolean"
+          },
+          "nullable": true
+         },
+         {
+          "name": "Barcelona",
+          "tpe": {
+           "presentableName": "boolean"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "val inhabitants_mal = inhabitants_2021\n    .withColumn(\"Malaga\", col(\"CPRON\").equalTo(29))\n\nval inhabitants_under_18_mal = inhabitants_mal\n    .filter(col(\"EDAD\").lt(18))\n\nval inhabitants_under_18_mal_not_spanish = inhabitants_under_18_mal\n    .filter(col(\"NACI\").notEqual(\"108\"))\n\nval inhabitants_under_18_mal_not_spanish_141 = inhabitants_under_18_mal_not_spanish\n    .filter(col(\"BARRIO\").equalTo(\"141\"))\n\nval inhabitants_tansform_3 = inhabitants_under_18_mal_not_spanish_141\n    .withColumn(\"Barcelona\", col(\"CPRON\").equalTo(8))",
+   "id": "",
+   "dateCreated": "2024-05-30 13:59:54.798",
+   "config": {
+    "title": true
+   },
+   "title": "Transformation - Alternative 3",
+   "dateStarted": "2024-05-30 14:06:15.338",
+   "dateUpdated": "2024-05-30 14:06:15.848",
+   "dateFinished": "2024-05-30 14:06:15.848",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "\u001b[1m\u001b[34minhabitants_mal\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: int ... 8 more fields]\n\u001b[1m\u001b[34minhabitants_under_18_mal\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m = [NHOP: string, EDAD: int ... 8 more fields]\n\u001b[1m\u001b[34minhabitants_under_18_mal_not_spanish\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m = [NHOP: string, EDAD: int ... 8 more fields]\n\u001b[1m\u001b[34minhabitants_under_18_mal_not_spanish_141\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m = [NHOP: string, EDAD: int ... 8 more fields]\n\u001b[1m\u001b[34minhabitants_tansform_3\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: int ... 9 more fields]\n"
+     }
+    ]
+   }
+  },
+  {
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "\ninhabitants_tranform_1.explain()\n\ninhabitants_tranform_2.explain()\n\ninhabitants_tansform_3.explain()",
+   "id": "",
+   "dateCreated": "2024-05-30 13:40:59.788",
+   "config": {
+    "title": true
+   },
+   "dateStarted": "2024-05-30 14:06:19.244",
+   "dateUpdated": "2024-05-30 14:06:19.760",
+   "dateFinished": "2024-05-30 14:06:19.760",
+   "title": "Execution plans Transformation 1 vs. Transformation 2",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "== Physical Plan ==\n*(1) Project [NHOP#1868, cast(EDAD#1869 as int) AS EDAD#1886, SEXO#1870, CPRON#1871, CMUNN#1872, NACI#1873, BARRIO#1874, PRDP#1875, MUDP#1876, (cast(CPRON#1871 as int) = 29) AS Malaga#1943, (cast(CPRON#1871 as int) = 8) AS Barcelona#1954]\n+- *(1) Filter (((((isnotnull(BARRIO#1874) AND isnotnull(NACI#1873)) AND isnotnull(EDAD#1869)) AND (BARRIO#1874 = 141)) AND NOT (NACI#1873 = 108)) AND (cast(EDAD#1869 as int) < 18))\n   +- *(1) ColumnarToRow\n      +- FileScan parquet [NHOP#1868,EDAD#1869,SEXO#1870,CPRON#1871,CMUNN#1872,NACI#1873,BARRIO#1874,PRDP#1875,MUDP#1876] Batched: true, DataFilters: [isnotnull(BARRIO#1874), isnotnull(NACI#1873), isnotnull(EDAD#1869), (BARRIO#1874 = 141), NOT (NA..., Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(BARRIO), IsNotNull(NACI), IsNotNull(EDAD), EqualTo(BARRIO,141), Not(EqualTo(NACI,108))], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string,PR...\n\n\n== Physical Plan ==\n*(1) Project [NHOP#1868, cast(EDAD#1869 as int) AS EDAD#1886, SEXO#1870, CPRON#1871, CMUNN#1872, NACI#1873, BARRIO#1874, PRDP#1875, MUDP#1876, (cast(CPRON#1871 as int) = 29) AS Malaga#1976, (cast(CPRON#1871 as int) = 8) AS Barcelona#1987]\n+- *(1) Filter (((((isnotnull(EDAD#1869) AND isnotnull(NACI#1873)) AND isnotnull(BARRIO#1874)) AND (cast(EDAD#1869 as int) < 18)) AND NOT (NACI#1873 = 108)) AND (BARRIO#1874 = 141))\n   +- *(1) ColumnarToRow\n      +- FileScan parquet [NHOP#1868,EDAD#1869,SEXO#1870,CPRON#1871,CMUNN#1872,NACI#1873,BARRIO#1874,PRDP#1875,MUDP#1876] Batched: true, DataFilters: [isnotnull(EDAD#1869), isnotnull(NACI#1873), isnotnull(BARRIO#1874), (cast(EDAD#1869 as int) < 18..., Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(EDAD), IsNotNull(NACI), IsNotNull(BARRIO), Not(EqualTo(NACI,108)), EqualTo(BARRIO,141)], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string,PR...\n\n\n== Physical Plan ==\n*(1) Project [NHOP#1868, cast(EDAD#1869 as int) AS EDAD#1886, SEXO#1870, CPRON#1871, CMUNN#1872, NACI#1873, BARRIO#1874, PRDP#1875, MUDP#1876, (cast(CPRON#1871 as int) = 29) AS Malaga#2009, (cast(CPRON#1871 as int) = 8) AS Barcelona#2020]\n+- *(1) Filter (((((isnotnull(EDAD#1869) AND isnotnull(NACI#1873)) AND isnotnull(BARRIO#1874)) AND (cast(EDAD#1869 as int) < 18)) AND NOT (NACI#1873 = 108)) AND (BARRIO#1874 = 141))\n   +- *(1) ColumnarToRow\n      +- FileScan parquet [NHOP#1868,EDAD#1869,SEXO#1870,CPRON#1871,CMUNN#1872,NACI#1873,BARRIO#1874,PRDP#1875,MUDP#1876] Batched: true, DataFilters: [isnotnull(EDAD#1869), isnotnull(NACI#1873), isnotnull(BARRIO#1874), (cast(EDAD#1869 as int) < 18..., Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(EDAD), IsNotNull(NACI), IsNotNull(BARRIO), Not(EqualTo(NACI,108)), EqualTo(BARRIO,141)], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string,PR...\n\n\n"
+     }
+    ]
+   }
+  },
+  {
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "status": "READY",
+   "text": "",
+   "id": "",
+   "dateCreated": "2024-05-30 14:03:57.270",
+   "config": {}
+  },
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "avg(EDAD)",
+          "tpe": {
+           "presentableName": "double"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "val inhabitants_ages_avg = inhabitants_tranform_1\n    .groupBy(col(\"NACI\")).avg(\"EDAD\")\n\ninhabitants_ages_avg.explain()\n        ",
+   "id": "",
+   "dateCreated": "2024-05-30 14:03:12.649",
+   "config": {
+    "title": true
+   },
+   "dateStarted": "2024-05-30 14:09:16.009",
+   "dateUpdated": "2024-05-30 14:09:16.376",
+   "dateFinished": "2024-05-30 14:09:16.376",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[NACI#1873], functions=[avg(EDAD#1886)])\n   +- Exchange hashpartitioning(NACI#1873, 200), ENSURE_REQUIREMENTS, [id=#1852]\n      +- HashAggregate(keys=[NACI#1873], functions=[partial_avg(EDAD#1886)])\n         +- Project [cast(EDAD#1869 as int) AS EDAD#1886, NACI#1873]\n            +- Filter (((((isnotnull(BARRIO#1874) AND isnotnull(NACI#1873)) AND isnotnull(EDAD#1869)) AND (BARRIO#1874 = 141)) AND NOT (NACI#1873 = 108)) AND (cast(EDAD#1869 as int) < 18))\n               +- FileScan parquet [EDAD#1869,NACI#1873,BARRIO#1874] Batched: true, DataFilters: [isnotnull(BARRIO#1874), isnotnull(NACI#1873), isnotnull(EDAD#1869), (BARRIO#1874 = 141), NOT (NA..., Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(BARRIO), IsNotNull(NACI), IsNotNull(EDAD), EqualTo(BARRIO,141), Not(EqualTo(NACI,108))], ReadSchema: struct<EDAD:string,NACI:string,BARRIO:string>\n\n\n\u001b[1m\u001b[34minhabitants_ages_avg\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NACI: string, avg(EDAD): double]\n"
+     }
+    ]
+   },
+   "title": "Apply a new transformation"
+  },
+  {
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "inhabitants_ages_avg\n    .write\n    .mode(\"overwrite\")\n    .csv(\"/data/csv/inhabitants_ages_avg.csv\")\n\ninhabitants_2021\n    .show(5, false)\n\ninhabitants_tranform_1\n    .count()\n\ninhabitants_tranform_2\n    .collectAsList()\n    .forEach(println)\n\ninhabitants_tansform_3\n    .first()",
+   "id": "",
+   "dateCreated": "2024-05-30 14:10:27.139",
+   "config": {
+    "title": true
+   },
+   "title": "Execute actions",
+   "dateStarted": "2024-05-30 14:14:15.685",
+   "dateUpdated": "2024-05-30 14:14:21.465",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "+----+----+----+-----+-----+----+------+----+----+\n|NHOP|EDAD|SEXO|CPRON|CMUNN|NACI|BARRIO|PRDP|MUDP|\n+----+----+----+-----+-----+----+------+----+----+\n|457 |63  |1   |29   |84   |108 |141   |0   |0   |\n|587 |22  |6   |29   |67   |108 |141   |0   |0   |\n|587 |19  |6   |29   |1    |108 |141   |0   |0   |\n|495 |69  |1   |18   |159  |108 |141   |0   |0   |\n|795 |52  |1   |51   |1    |108 |141   |0   |0   |\n+----+----+----+-----+-----+----+------+----+----+\nonly showing top 5 rows\n\n[673,15,6,29,67,407,141,0,0,true,false]\n[673,13,6,29,67,407,141,0,0,true,false]\n[673,12,1,66,407,407,141,0,0,false,false]\n[870,5,1,66,128,128,141,0,0,false,false]\n[964,17,1,66,347,347,141,0,0,false,false]\n[1002,13,6,66,342,342,141,29,91,false,false]\n[537,3,1,29,67,228,141,0,0,true,false]\n[537,6,1,29,67,228,141,0,0,true,false]\n[524,12,1,66,135,135,141,0,0,false,false]\n[524,9,1,66,135,135,141,0,0,false,false]\n[517,10,6,29,67,228,141,0,0,true,false]\n[592,14,1,66,228,228,141,0,0,false,false]\n[541,14,6,66,228,228,141,0,0,false,false]\n[430,1,6,66,407,407,141,0,0,false,false]\n[378,4,6,66,343,343,141,0,0,false,false]\n[378,10,6,66,343,343,141,0,0,false,false]\n[258,1,1,29,67,351,141,0,0,true,false]\n[313,1,1,66,351,351,141,0,0,false,false]\n[455,8,6,66,342,342,141,0,0,false,false]\n[552,10,1,66,154,154,141,0,0,false,false]\n[430,13,6,66,407,407,141,0,0,false,false]\n[511,5,6,66,351,351,141,0,0,false,false]\n[613,3,6,66,351,351,141,47,155,false,false]\n[565,0,1,66,351,351,141,0,0,false,false]\n[565,12,1,66,351,351,141,0,0,false,false]\n[611,9,1,66,228,228,141,66,228,false,false]\n[611,2,6,66,228,228,141,66,228,false,false]\n[611,8,6,66,228,228,141,66,228,false,false]\n[611,4,1,66,228,228,141,66,228,false,false]\n[458,17,6,66,154,154,141,30,16,false,false]\n[106,8,1,29,67,407,141,0,0,true,false]\n[106,13,6,29,67,407,141,0,0,true,false]\n[106,14,1,66,407,407,141,0,0,false,false]\n[428,11,6,29,67,407,141,0,0,true,false]\n[574,3,1,66,321,321,141,0,0,false,false]\n[574,6,1,66,321,321,141,0,0,false,false]\n[644,5,6,66,213,213,141,66,213,false,false]\n[844,13,6,66,347,347,141,0,0,false,false]\n[844,15,6,66,347,347,141,0,0,false,false]\n[294,14,1,66,135,135,141,0,0,false,false]\n[716,7,6,29,67,407,141,0,0,true,false]\n[849,8,6,66,128,128,141,0,0,false,false]\n[849,12,6,66,128,128,141,0,0,false,false]\n[823,0,6,29,67,239,141,0,0,true,false]\n[620,15,6,29,67,234,141,0,0,true,false]\n[620,15,1,29,67,126,141,0,0,true,false]\n[773,6,1,29,67,407,141,0,0,true,false]\n[773,10,6,29,67,407,141,0,0,true,false]\n[773,3,1,29,67,407,141,0,0,true,false]\n[323,3,1,29,67,228,141,0,0,true,false]\n[822,8,1,29,67,228,141,0,0,true,false]\n[822,7,1,29,67,228,141,0,0,true,false]\n[628,17,6,66,347,347,141,0,0,false,false]\n[139,1,1,29,67,148,141,0,0,true,false]\n[264,0,6,29,67,424,141,0,0,true,false]\n[264,12,1,66,424,424,141,0,0,false,false]\n[664,1,1,29,67,413,141,0,0,true,false]\n[637,16,1,66,407,407,141,0,0,false,false]\n[637,0,6,29,67,407,141,0,0,true,false]\n[740,2,6,29,67,407,141,0,0,true,false]\n[577,2,6,29,67,104,141,0,0,true,false]\n[704,14,6,29,67,115,141,0,0,true,false]\n[704,1,6,29,67,115,141,0,0,true,false]\n[537,7,6,66,228,228,141,18,916,false,false]\n[537,2,6,8,245,228,141,18,916,false,true]\n[537,9,6,8,245,228,141,18,916,false,true]\n[731,13,6,29,25,228,141,0,0,true,false]\n[624,6,1,29,67,135,141,0,0,true,false]\n[719,3,6,66,426,426,141,66,426,false,false]\n[719,6,1,66,426,426,141,66,426,false,false]\n[382,1,1,29,67,347,141,0,0,true,false]\n[669,17,1,66,416,433,141,0,0,false,false]\n[864,7,1,66,228,228,141,0,0,false,false]\n[51,13,1,66,407,407,141,0,0,false,false]\n[748,2,1,29,67,203,141,0,0,true,false]\n[741,10,1,66,340,340,141,0,0,false,false]\n[844,4,1,29,67,135,141,0,0,true,false]\n[810,16,1,29,67,135,141,0,0,true,false]\n[810,6,6,29,67,135,141,0,0,true,false]\n[195,3,6,29,67,228,141,0,0,true,false]\n[939,3,1,66,131,131,141,0,0,false,false]\n[708,11,6,29,67,135,141,0,0,true,false]\n[915,0,1,29,67,345,141,0,0,true,false]\n[924,6,6,29,67,135,141,0,0,true,false]\n[946,8,1,29,67,203,141,0,0,true,false]\n[946,11,1,29,67,228,141,0,0,true,false]\n[876,1,1,29,67,135,141,0,0,true,false]\n[887,15,1,66,228,228,141,66,228,false,false]\n[15,14,1,66,342,342,141,0,0,false,false]\n[15,12,6,66,342,342,141,0,0,false,false]\n[919,5,1,29,67,407,141,0,0,true,false]\n[1003,3,1,28,79,239,141,28,123,false,false]\n[946,16,6,66,350,350,141,0,0,false,false]\n[946,16,1,66,350,350,141,0,0,false,false]\n[60,1,1,29,67,135,141,0,0,true,false]\n[410,9,6,28,74,407,141,29,69,false,false]\n[410,14,1,28,74,407,141,29,69,false,false]\n[409,11,1,66,347,347,141,66,347,false,false]\n[384,15,1,29,67,128,141,0,0,true,false]\n[325,4,6,66,343,343,141,66,343,false,false]\n[965,8,6,66,407,407,141,66,407,false,false]\n[885,0,6,29,67,407,141,0,0,true,false]\n\u001b[1m\u001b[34mres57\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Row\u001b[0m = [673,15,6,29,67,407,141,0,0,true,false]\n"
+     }
+    ]
+   },
+   "dateFinished": "2024-05-30 14:14:21.465"
+  }
+ ],
+ "name": "Zeppelin Notebook",
+ "id": "",
+ "noteParams": {},
+ "noteForms": {},
+ "angularObjects": {},
+ "config": {
+  "isZeppelinNotebookCronEnable": false,
+  "looknfeel": "default",
+  "personalizedMode": "false"
+ },
+ "info": {}
+}

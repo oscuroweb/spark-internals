@@ -1,0 +1,616 @@
+{
+ "paragraphs": [
+  {
+   "settings": {
+    "params": {},
+    "forms": {}
+   },
+   "apps": [],
+   "status": "READY",
+   "text": "\nval inhabitants_2017 = spark.read.parquet(\"/data/parquet/inhabitants_2017.parquet\")\n    .withColumn(\"year\", lit(2017).cast(\"int\"))\n    .drop(\"ID\")\nval inhabitants_2018 = spark.read.parquet(\"/data/parquet/inhabitants_2018.parquet\")\n    .withColumn(\"year\", lit(2018).cast(\"int\"))\nval inhabitants_2019 = spark.read.parquet(\"/data/parquet/inhabitants_2019.parquet\")\n    .withColumn(\"year\", lit(2019).cast(\"int\"))\nval inhabitants_2020 = spark.read.parquet(\"/data/parquet/inhabitants_2020.parquet\")\n    .withColumn(\"year\", lit(2020).cast(\"int\"))\nval inhabitants_2021 = spark.read.parquet(\"/data/parquet/inhabitants_2021.parquet\")\n    .withColumn(\"year\", lit(2021).cast(\"int\"))\n    .drop(\"PRDP\", \"MUDP\")\n\nval municipality = spark.read.parquet(\"/data/parquet/municipality.parquet\").alias(\"municipality\")\nval province = spark.read.parquet(\"/data/parquet/province.parquet\").alias(\"province\")\nval country = spark.read.parquet(\"/data/parquet/country.parquet\").alias(\"country\")\n\nval inhabitants = inhabitants_2017\n    .unionByName(inhabitants_2018)\n    .unionByName(inhabitants_2019)\n    .unionByName(inhabitants_2020)\n    .unionByName(inhabitants_2021)\n    .alias(\"inhabitants\")\n",
+   "config": {}
+  },
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "year",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": false
+         },
+         {
+          "name": "PROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PROVINCIA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUNICIPO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FALTA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FBAJA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CCAPP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NOMBREPROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CODPAIS",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CTRL",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PAIS",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FALTA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FBAJA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "val inhabitants_agg_1 = inhabitants\n    .join(municipality, inhabitants.col(\"CMUNN\").equalTo(municipality.col(\"MUN\")), \"left\")\n    .join(province, inhabitants.col(\"CPRON\").equalTo(province.col(\"CPROV\")), \"left\")\n    .join(country, inhabitants.col(\"NACI\").equalTo(country.col(\"CODPAIS\")), \"left\")\n\n\ninhabitants_agg_1.count()\n\ninhabitants_agg_1.explain()\n\n",
+   "id": "",
+   "dateCreated": "2024-05-30 16:36:59.325",
+   "config": {
+    "title": true
+   },
+   "dateStarted": "2024-05-30 23:02:45.524",
+   "dateUpdated": "2024-05-30 23:02:52.674",
+   "dateFinished": "2024-05-30 23:02:52.674",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- BroadcastHashJoin [NACI#1138], [CODPAIS#881], LeftOuter, BuildRight, false\n   :- BroadcastHashJoin [CPRON#1136], [CPROV#874], LeftOuter, BuildRight, false\n   :  :- BroadcastHashJoin [CMUNN#1137], [MUN#863], LeftOuter, BuildRight, false\n   :  :  :- Union\n   :  :  :  :- Project [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, 2017 AS year#1149]\n   :  :  :  :  +- FileScan parquet [NHOP#1133,EDAD#1134,SEXO#1135,CPRON#1136,CMUNN#1137,NACI#1138,BARRIO#1139] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2017.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :  :- Project [NHOP#1167, EDAD#1168, SEXO#1169, CPRON#1170, CMUNN#1171, NACI#1172, BARRIO#1173, 2018 AS year#1181]\n   :  :  :  :  +- FileScan parquet [NHOP#1167,EDAD#1168,SEXO#1169,CPRON#1170,CMUNN#1171,NACI#1172,BARRIO#1173] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2018.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :  :- Project [NHOP#1190, EDAD#1191, SEXO#1192, CPRON#1193, CMUNN#1194, NACI#1195, BARRIO#1196, 2019 AS year#1204]\n   :  :  :  :  +- FileScan parquet [NHOP#1190,EDAD#1191,SEXO#1192,CPRON#1193,CMUNN#1194,NACI#1195,BARRIO#1196] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2019.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :  :- Project [NHOP#1213, EDAD#1219, SEXO#1214, CPRON#1215, CMUNN#1216, NACI#1217, BARRIO#1218, 2020 AS year#1227]\n   :  :  :  :  +- FileScan parquet [NHOP#1213,SEXO#1214,CPRON#1215,CMUNN#1216,NACI#1217,BARRIO#1218,EDAD#1219] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2020.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string,EDAD:string>\n   :  :  :  +- Project [NHOP#1236, EDAD#1237, SEXO#1238, CPRON#1239, CMUNN#1240, NACI#1241, BARRIO#1242, 2021 AS year#1254]\n   :  :  :     +- FileScan parquet [NHOP#1236,EDAD#1237,SEXO#1238,CPRON#1239,CMUNN#1240,NACI#1241,BARRIO#1242] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  +- BroadcastExchange HashedRelationBroadcastMode(List(input[2, string, false]),false), [id=#5033]\n   :  :     +- Filter isnotnull(MUN#863)\n   :  :        +- FileScan parquet [PROV#861,PROVINCIA#862,MUN#863,MUNICIPO#864,FALTA#865,FBAJA#866] Batched: true, DataFilters: [isnotnull(MUN#863)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/municipality.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(MUN)], ReadSchema: struct<PROV:string,PROVINCIA:string,MUN:string,MUNICIPO:string,FALTA:string,FBAJA:string>\n   :  +- BroadcastExchange HashedRelationBroadcastMode(List(input[1, string, false]),false), [id=#5036]\n   :     +- Filter isnotnull(CPROV#874)\n   :        +- FileScan parquet [CA#873,CPROV#874,CCAPP#875,NOMBREPROV#876] Batched: true, DataFilters: [isnotnull(CPROV#874)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/province.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(CPROV)], ReadSchema: struct<CA:string,CPROV:string,CCAPP:string,NOMBREPROV:string>\n   +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, false]),false), [id=#5039]\n      +- Filter isnotnull(CODPAIS#881)\n         +- FileScan parquet [CODPAIS#881,CTRL#882,PAIS#883,FALTA#884,FBAJA#885] Batched: true, DataFilters: [isnotnull(CODPAIS#881)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/country.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(CODPAIS)], ReadSchema: struct<CODPAIS:string,CTRL:string,PAIS:string,FALTA:string,FBAJA:string>\n\n\n\u001b[1m\u001b[34minhabitants_agg_1\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 21 more fields]\n"
+     }
+    ]
+   },
+   "title": "Join operation"
+  },
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "year",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": false
+         },
+         {
+          "name": "PROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PROVINCIA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUNICIPO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FALTA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FBAJA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CCAPP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NOMBREPROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CODPAIS",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CTRL",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PAIS",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FALTA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FBAJA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "inhabitants.cache()\n\nval inhabitants_agg_2 = inhabitants\n    .join(municipality, inhabitants.col(\"CMUNN\").equalTo(municipality.col(\"MUN\")), \"left\")\n    .join(province, inhabitants.col(\"CPRON\").equalTo(province.col(\"CPROV\")), \"left\")\n    .join(country, inhabitants.col(\"NACI\").equalTo(country.col(\"CODPAIS\")), \"left\")\n\ninhabitants_agg_2.count()\n\ninhabitants_agg_2.explain()",
+   "id": "",
+   "dateCreated": "2024-05-30 22:46:48.666",
+   "config": {
+    "title": true
+   },
+   "dateStarted": "2024-05-30 23:03:02.266",
+   "dateUpdated": "2024-05-30 23:03:12.499",
+   "dateFinished": "2024-05-30 23:03:12.499",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- BroadcastHashJoin [NACI#1138], [CODPAIS#881], LeftOuter, BuildRight, false\n   :- BroadcastHashJoin [CPRON#1136], [CPROV#874], LeftOuter, BuildRight, false\n   :  :- BroadcastHashJoin [CMUNN#1137], [MUN#863], LeftOuter, BuildRight, false\n   :  :  :- InMemoryTableScan [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, year#1149]\n   :  :  :     +- InMemoryRelation [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, year#1149], StorageLevel(disk, memory, deserialized, 1 replicas)\n   :  :  :           +- Union\n   :  :  :              :- *(1) Project [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, 2017 AS year#1149]\n   :  :  :              :  +- *(1) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1133,EDAD#1134,SEXO#1135,CPRON#1136,CMUNN#1137,NACI#1138,BARRIO#1139] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2017.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :              :- *(2) Project [NHOP#1167, EDAD#1168, SEXO#1169, CPRON#1170, CMUNN#1171, NACI#1172, BARRIO#1173, 2018 AS year#1181]\n   :  :  :              :  +- *(2) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1167,EDAD#1168,SEXO#1169,CPRON#1170,CMUNN#1171,NACI#1172,BARRIO#1173] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2018.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :              :- *(3) Project [NHOP#1190, EDAD#1191, SEXO#1192, CPRON#1193, CMUNN#1194, NACI#1195, BARRIO#1196, 2019 AS year#1204]\n   :  :  :              :  +- *(3) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1190,EDAD#1191,SEXO#1192,CPRON#1193,CMUNN#1194,NACI#1195,BARRIO#1196] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2019.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :              :- *(4) Project [NHOP#1213, EDAD#1219, SEXO#1214, CPRON#1215, CMUNN#1216, NACI#1217, BARRIO#1218, 2020 AS year#1227]\n   :  :  :              :  +- *(4) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1213,SEXO#1214,CPRON#1215,CMUNN#1216,NACI#1217,BARRIO#1218,EDAD#1219] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2020.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string,EDAD:string>\n   :  :  :              +- *(5) Project [NHOP#1236, EDAD#1237, SEXO#1238, CPRON#1239, CMUNN#1240, NACI#1241, BARRIO#1242, 2021 AS year#1254]\n   :  :  :                 +- *(5) ColumnarToRow\n   :  :  :                    +- FileScan parquet [NHOP#1236,EDAD#1237,SEXO#1238,CPRON#1239,CMUNN#1240,NACI#1241,BARRIO#1242] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  +- BroadcastExchange HashedRelationBroadcastMode(List(input[2, string, false]),false), [id=#5436]\n   :  :     +- Filter isnotnull(MUN#863)\n   :  :        +- FileScan parquet [PROV#861,PROVINCIA#862,MUN#863,MUNICIPO#864,FALTA#865,FBAJA#866] Batched: true, DataFilters: [isnotnull(MUN#863)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/municipality.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(MUN)], ReadSchema: struct<PROV:string,PROVINCIA:string,MUN:string,MUNICIPO:string,FALTA:string,FBAJA:string>\n   :  +- BroadcastExchange HashedRelationBroadcastMode(List(input[1, string, false]),false), [id=#5439]\n   :     +- Filter isnotnull(CPROV#874)\n   :        +- FileScan parquet [CA#873,CPROV#874,CCAPP#875,NOMBREPROV#876] Batched: true, DataFilters: [isnotnull(CPROV#874)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/province.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(CPROV)], ReadSchema: struct<CA:string,CPROV:string,CCAPP:string,NOMBREPROV:string>\n   +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, false]),false), [id=#5442]\n      +- Filter isnotnull(CODPAIS#881)\n         +- FileScan parquet [CODPAIS#881,CTRL#882,PAIS#883,FALTA#884,FBAJA#885] Batched: true, DataFilters: [isnotnull(CODPAIS#881)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/country.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(CODPAIS)], ReadSchema: struct<CODPAIS:string,CTRL:string,PAIS:string,FALTA:string,FBAJA:string>\n\n\n\u001b[1m\u001b[34minhabitants_agg_2\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 21 more fields]\n"
+     }
+    ]
+   },
+   "title": "Cache and join"
+  },
+  {
+   "settings": {
+    "params": {
+     "bdtMeta": {
+      "ZTOOLS_DATA_FRAMES": [
+       {
+        "columns": [
+         {
+          "name": "NHOP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "EDAD",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "SEXO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPRON",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CMUNN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NACI",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "BARRIO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "year",
+          "tpe": {
+           "presentableName": "integer"
+          },
+          "nullable": false
+         },
+         {
+          "name": "PROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PROVINCIA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUN",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "MUNICIPO",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FALTA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FBAJA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CPROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CCAPP",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "NOMBREPROV",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CODPAIS",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "CTRL",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "PAIS",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FALTA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         },
+         {
+          "name": "FBAJA",
+          "tpe": {
+           "presentableName": "string"
+          },
+          "nullable": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "forms": {}
+   },
+   "apps": [],
+   "status": "FINISHED",
+   "text": "val inhabitants_agg_3 = inhabitants\n    .join(municipality, inhabitants.col(\"CMUNN\").equalTo(municipality.col(\"MUN\")), \"left\")\n    .join(province, inhabitants.col(\"CPRON\").equalTo(province.col(\"CPROV\")), \"left\")\n    .join(country, inhabitants.col(\"NACI\").equalTo(country.col(\"CODPAIS\")), \"left\")\n\ninhabitants_agg_3.count()\n\ninhabitants_agg_3.explain()",
+   "id": "",
+   "dateCreated": "2024-05-30 23:03:23.927",
+   "config": {
+    "title": true
+   },
+   "dateStarted": "2024-05-30 23:03:41.681",
+   "dateUpdated": "2024-05-30 23:03:44.849",
+   "results": {
+    "code": "SUCCESS",
+    "msg": [
+     {
+      "type": "TEXT",
+      "data": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- BroadcastHashJoin [NACI#1138], [CODPAIS#881], LeftOuter, BuildRight, false\n   :- BroadcastHashJoin [CPRON#1136], [CPROV#874], LeftOuter, BuildRight, false\n   :  :- BroadcastHashJoin [CMUNN#1137], [MUN#863], LeftOuter, BuildRight, false\n   :  :  :- InMemoryTableScan [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, year#1149]\n   :  :  :     +- InMemoryRelation [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, year#1149], StorageLevel(disk, memory, deserialized, 1 replicas)\n   :  :  :           +- Union\n   :  :  :              :- *(1) Project [NHOP#1133, EDAD#1134, SEXO#1135, CPRON#1136, CMUNN#1137, NACI#1138, BARRIO#1139, 2017 AS year#1149]\n   :  :  :              :  +- *(1) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1133,EDAD#1134,SEXO#1135,CPRON#1136,CMUNN#1137,NACI#1138,BARRIO#1139] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2017.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :              :- *(2) Project [NHOP#1167, EDAD#1168, SEXO#1169, CPRON#1170, CMUNN#1171, NACI#1172, BARRIO#1173, 2018 AS year#1181]\n   :  :  :              :  +- *(2) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1167,EDAD#1168,SEXO#1169,CPRON#1170,CMUNN#1171,NACI#1172,BARRIO#1173] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2018.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :              :- *(3) Project [NHOP#1190, EDAD#1191, SEXO#1192, CPRON#1193, CMUNN#1194, NACI#1195, BARRIO#1196, 2019 AS year#1204]\n   :  :  :              :  +- *(3) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1190,EDAD#1191,SEXO#1192,CPRON#1193,CMUNN#1194,NACI#1195,BARRIO#1196] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2019.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  :              :- *(4) Project [NHOP#1213, EDAD#1219, SEXO#1214, CPRON#1215, CMUNN#1216, NACI#1217, BARRIO#1218, 2020 AS year#1227]\n   :  :  :              :  +- *(4) ColumnarToRow\n   :  :  :              :     +- FileScan parquet [NHOP#1213,SEXO#1214,CPRON#1215,CMUNN#1216,NACI#1217,BARRIO#1218,EDAD#1219] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2020.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string,EDAD:string>\n   :  :  :              +- *(5) Project [NHOP#1236, EDAD#1237, SEXO#1238, CPRON#1239, CMUNN#1240, NACI#1241, BARRIO#1242, 2021 AS year#1254]\n   :  :  :                 +- *(5) ColumnarToRow\n   :  :  :                    +- FileScan parquet [NHOP#1236,EDAD#1237,SEXO#1238,CPRON#1239,CMUNN#1240,NACI#1241,BARRIO#1242] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/inhabitants_2021.parquet], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<NHOP:string,EDAD:string,SEXO:string,CPRON:string,CMUNN:string,NACI:string,BARRIO:string>\n   :  :  +- BroadcastExchange HashedRelationBroadcastMode(List(input[2, string, false]),false), [id=#5774]\n   :  :     +- Filter isnotnull(MUN#863)\n   :  :        +- FileScan parquet [PROV#861,PROVINCIA#862,MUN#863,MUNICIPO#864,FALTA#865,FBAJA#866] Batched: true, DataFilters: [isnotnull(MUN#863)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/municipality.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(MUN)], ReadSchema: struct<PROV:string,PROVINCIA:string,MUN:string,MUNICIPO:string,FALTA:string,FBAJA:string>\n   :  +- BroadcastExchange HashedRelationBroadcastMode(List(input[1, string, false]),false), [id=#5777]\n   :     +- Filter isnotnull(CPROV#874)\n   :        +- FileScan parquet [CA#873,CPROV#874,CCAPP#875,NOMBREPROV#876] Batched: true, DataFilters: [isnotnull(CPROV#874)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/province.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(CPROV)], ReadSchema: struct<CA:string,CPROV:string,CCAPP:string,NOMBREPROV:string>\n   +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, false]),false), [id=#5780]\n      +- Filter isnotnull(CODPAIS#881)\n         +- FileScan parquet [CODPAIS#881,CTRL#882,PAIS#883,FALTA#884,FBAJA#885] Batched: true, DataFilters: [isnotnull(CODPAIS#881)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/data/parquet/country.parquet], PartitionFilters: [], PushedFilters: [IsNotNull(CODPAIS)], ReadSchema: struct<CODPAIS:string,CTRL:string,PAIS:string,FALTA:string,FBAJA:string>\n\n\n\u001b[1m\u001b[34minhabitants_agg_3\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [NHOP: string, EDAD: string ... 21 more fields]\n"
+     }
+    ]
+   },
+   "dateFinished": "2024-05-30 23:03:44.849",
+   "title": "Join after cache"
+  }
+ ],
+ "name": "Zeppelin Notebook",
+ "id": "",
+ "noteParams": {},
+ "noteForms": {},
+ "angularObjects": {},
+ "config": {
+  "isZeppelinNotebookCronEnable": false,
+  "looknfeel": "default",
+  "personalizedMode": "false"
+ },
+ "info": {}
+}

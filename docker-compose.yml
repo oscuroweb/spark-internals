@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  zeppelin:
+    build:
+      context: .
+    container_name: zeppelin
+    platform: linux/x86_64
+    ports:
+      - "8888:8080"
+      - "4040:4040"
+    volumes:
+      - ./notebook/:/opt/zeppelin/notebook/SparkInternals
+      - ./data:/data
+    environment:
+      - ZEPPELIN_NOTEBOOK_DIR=/opt/zeppelin/notebook/SparkInternals
+      - SPARK_PUBLIC_DNS=localhost
