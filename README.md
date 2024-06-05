@@ -74,7 +74,7 @@ Apache Spark offers a wide range of features that make it a powerful tool for bi
 By leveraging these key features, Apache Spark provides a robust and flexible platform for handling diverse big data processing and analytics workloads efficiently.
 
 ## Examples
-1. [Trnasform form CSV to Parquet](./notebook/00_transform_from_csv_to_parquet_2JZUJZRPQ.zpln)
+1. [Transform from CSV to Parquet](./notebook/00_transform_from_csv_to_parquet_2JZUJZRPQ.zpln)
 2. [Transformation vs. Actions](./notebook/01_transformation_vs_actions_202405301.zpln)
 3. [Joins](./notebook/02_joins_202405302.zpln)
 4. [Repartition vs. Coalesce](./notebook/03_repartition_vs_coalesce_202405303.zpln)
